@@ -1,0 +1,22 @@
+clear
+close all
+imgRGB = imread('apple.jpg');
+siz = size(imgRGB);
+im_pos = im2bw(imread('apple_red.jpg'));
+im_neg = im2bw(imread('apple_bg.jpg'));
+im_pos_mask = zeros(siz);
+im_neg_mask = zeros(siz);
+for i =1:3
+    im_pos_mask(:,:,i) = im_pos;
+    im_neg_mask(:,:,i) = im_neg;
+end
+im_pos_RGB = double(imgRGB).*im_pos_mask;
+im_neg_RGB = double(imgRGB).*im_neg_mask;
+pos = find(im_pos==1);
+neg = find(im_neg==1);
+[pos_x,pos_y] = ind2sub(siz(1:2),pos);
+for i =1:3
+    temp_pos = im_pos_RGB(:,:,i);
+    temp_neg = im_neg_RGB(:,:,i);
+    pos_RGB() = 
+end
