@@ -1,7 +1,7 @@
 clear
 close all
-imgRGB = imread('apple.jpg');
-load('w.mat')
+imgRGB = imread('image/apple4.jpg');
+load('w/w2.mat')
 siz = size(imgRGB);
 [X,Y] = meshgrid(1:siz(1),1:siz(2));
 Xv = X(:);
@@ -20,4 +20,8 @@ Yt = double(A)*w;
 result = reshape(Yt, siz(2), siz(1));
 result = result';
 result(result<0) = 0;
-result(result>0) = 255;
+result(result>1) = 255;
+subplot(1,2,1)
+imshow(imgRGB)
+subplot(1,2,2)
+imshow(uint8(result))

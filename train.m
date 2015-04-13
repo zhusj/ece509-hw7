@@ -1,9 +1,9 @@
 clear
 close all
-imgRGB = imread('apple.jpg');
+imgRGB = imread('image/apple2.jpeg');
 siz = size(imgRGB);
-im_pos = im2bw(imread('apple_red.jpg'));
-im_neg = im2bw(imread('apple_bg.jpg'));
+im_pos = im2bw(imread('apple2_apple.jpg'));
+im_neg = im2bw(imread('apple2_bg.jpg'));
 im_pos_mask = zeros(siz);
 im_neg_mask = zeros(siz);
 for i =1:3
