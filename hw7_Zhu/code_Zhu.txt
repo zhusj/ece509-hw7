@@ -1,0 +1,156 @@
+%%%%% label.m
+
+clear all
+close all
+im = imread('image/hand.jpg');
+Ncol = size(im,2);
+Nrow = size(im,1);
+bg_num = 4;
+apple = roipoly(im);
+[image_dir, name, exd] = fileparts('hand.jpg');
+red_save_name = [name '_hand' exd];
+imwrite(apple, red_save_name); 
+bg_t = zeros(Nrow, Ncol);
+for i = 1:bg_num
+    bg{i} = roipoly(im); 
+    bg_t = bg_t + bg{i};
+end
+
+bg_save_name = [name '_bg' exd];
+imwrite(bg_t, bg_save_name);  
+
+
+%%%%%% train.m
+
+clear
+close all
+imgRGB = imread('image/hand.jpg');
+siz = size(imgRGB);
+im_pos = im2bw(imread('hand_hand.jpg'));
+im_neg = im2bw(imread('hand_bg.jpg'));
+im_pos_mask = zeros(siz);
+im_neg_mask = zeros(siz);
+center = siz/2;
+for i =1:3
+    im_pos_mask(:,:,i) = im_pos;
+    im_neg_mask(:,:,i) = im_neg;
+end
+im_pos_RGB = double(imgRGB).*im_pos_mask;
+im_neg_RGB = double(imgRGB).*im_neg_mask;clear
+% close all
+imgRGB = imread('image/apple2.jpeg');
+% load('w/new_w2_with_xy.mat')
+load('w.mat')
+siz = size(imgRGB);
+center = siz/2;
+[X,Y] = meshgrid(1:siz(1),1:siz(2));
+Xv = X(:);
+Yv = Y(:);
+R = imgRGB(:,:,1);
+G = imgRGB(:,:,2);
+B = imgRGB(:,:,3);
+R = R';
+Rv = R(:);
+G = G';
+Gv = G(:);
+B = B';
+Bv = B(:);
+dist = [(Xv - center(1))/center(1), (Yv - center(2))/center(2)];
+norm = sqrt(dist(:,1).^2 + dist(:,2).^2)*255;
+A = [Rv Gv Bv norm];
+% A = [Rv Gv Bv Xv Yv];
+% A = [Rv Gv Bv];
+Yt = double(A)*w;
+result = reshape(Yt, siz(2), siz(1));
+result = result';
+threshold = 0;
+result(result>threshold) = 255;
+result(result<=threshold) = 0;
+% result(result>threshold) = 255;
+figure
+subplot(1,2,1)
+imshow(imgRGB)
+subplot(1,2,2)
+imshow(uint8(result))
+
+pos = find(im_pos==1);
+neg = find(im_neg==1);
+[pos_x, pos_y] = ind2sub(siz(1:2), pos);
+[neg_x, neg_y] = ind2sub(siz(1:2), neg);
+for i =1:3
+    temp_pos = im_pos_RGB(:,:,i);
+    temp_neg = im_neg_RGB(:,:,i);
+    pos_RGB(:,i) = temp_pos(pos);
+    neg_RGB(:,i) = temp_neg(neg);
+end
+A_dim = 4;
+pos_dist = [(pos_x - center(1))/center(1), (pos_y - center(2))/center(2)];
+pos_norm = sqrt(pos_dist(:,1).^2 + pos_dist(:,2).^2)*255;
+neg_dist = [(neg_x - center(1))/center(1), (neg_y - center(2))/center(2)];
+neg_norm = sqrt(neg_dist(:,1).^2 + neg_dist(:,2).^2)*255;
+%A = [[pos_RGB, pos_norm];[neg_RGB, neg_norm]];
+ A = [[pos_RGB, pos_x, pos_y];[neg_RGB, neg_x, neg_y]];
+% A = [pos_RGB;neg_RGB];
+
+b = ones(length(A), 1);
+Y = [ones(length(pos),A_dim);-ones(length(neg),A_dim)];
+% Y = [ones(length(pos),1);-ones(length(neg),1)];
+
+u_dim = length(pos_x);
+v_dim = length(neg_x);
+lambda = 0.1;
+
+cvx_begin
+    variables w(A_dim) u(u_dim) v(v_dim)
+    minimize norm(w) + lambda * (sum(u)+sum(v))
+    subject to
+    (Y.*A)*w >= b + [-u;-v];
+    u >= 0
+    v >= 0
+cvx_end
+save('w.mat', 'w')
+
+
+%%%%%% test.m
+clear
+% close all
+imgRGB = imread('image/apple2.jpeg');
+% load('w/new_w2_with_xy.mat')
+load('w.mat')
+siz = size(imgRGB);
+center = siz/2;
+[X,Y] = meshgrid(1:siz(1),1:siz(2));
+Xv = X(:);
+Yv = Y(:);
+R = imgRGB(:,:,1);
+G = imgRGB(:,:,2);
+B = imgRGB(:,:,3);
+R = R';
+Rv = R(:);
+G = G';
+Gv = G(:);
+B = B';
+Bv = B(:);
+dist = [(Xv - center(1))/center(1), (Yv - center(2))/center(2)];
+norm = sqrt(dist(:,1).^2 + dist(:,2).^2)*255;
+A = [Rv Gv Bv norm];
+% A = [Rv Gv Bv Xv Yv];
+% A = [Rv Gv Bv];
+Yt = double(A)*w;
+result = reshape(Yt, siz(2), siz(1));
+result = result';
+threshold = 0;
+result(result>threshold) = 255;
+result(result<=threshold) = 0;
+% result(result>threshold) = 255;
+figure
+subplot(1,2,1)
+imshow(imgRGB)
+subplot(1,2,2)
+imshow(uint8(result))
+
+
+
+ 
+ 
+

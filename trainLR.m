@@ -23,7 +23,7 @@ for i =1:3
     pos_RGB(:,i) = temp_pos(pos);
     neg_RGB(:,i) = temp_neg(neg);
 end
-A_dim = 4;
+A_dim = 5;
 pos_dist = [(pos_x - center(1))/center(1), (pos_y - center(2))/center(2)];
 pos_norm = sqrt(pos_dist(:,1).^2 + pos_dist(:,2).^2)*255;
 neg_dist = [(neg_x - center(1))/center(1), (neg_y - center(2))/center(2)];
@@ -33,19 +33,16 @@ neg_norm = sqrt(neg_dist(:,1).^2 + neg_dist(:,2).^2)*255;
 % A = [pos_RGB;neg_RGB];
 
 b = ones(length(A), 1);
-Y = [ones(length(pos),A_dim);-ones(length(neg),A_dim)];
+Y = [ones(length(pos),A_dim);-zeros(length(neg),A_dim)];
 % Y = [ones(length(pos),1);-ones(length(neg),1)];
 
 u_dim = length(pos_x);
 v_dim = length(neg_x);
 lambda = 0.1;
+U = [ones(length(A), A_dim) u];
 
 cvx_begin
-    variables w(A_dim) u(u_dim) v(v_dim)
-    minimize norm(w) + lambda * (sum(u)+sum(v))
-    subject to
-    (Y.*A)*w >= b + [-u;-v];
-    u >= 0
-    v >= 0
+    variables x(2,5)
+    maximize(y'*U*x-sum(log_sum_exp([zeros(1,m); x'*U'])))
 cvx_end
 save('w.mat', 'w')
